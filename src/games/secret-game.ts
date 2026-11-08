@@ -10,12 +10,11 @@ import './secret.css';
  *     IV · Au (dans le cabinet gothique, dont la porte s'ouvre quand la lunette, tournée à la manivelle,
  *     renvoie le soleil de la fenêtre sur le cristal serti dans la porte).
  *  2. Les bocaux de l'apothicaire traduisent les symboles en métaux (Fe → FER…).
- *  3. La table des Anciens, dans le livre « De Metallis et Astris » de la bibliothèque, relie chaque métal à son astre : ♂ ♃ ☽ ☉.
+ *  3. La table des Anciens, dans le livre noir au soleil d'or (« De Metallis et Astris »), relie chaque métal à son astre : ♂ ♃ ☽ ☉.
  *  4. Le cercle de déclinaison de la lunette donne le jour de chaque astre, en latin
  *     (♂ DIES MARTIS → mardi, ♃ IOVIS → jeudi, ☽ LVNAE → lundi, ☉ SOLIS → dimanche).
  *  5. Au fond du coffre (une fois le cryptogramme résolu), une grille : lignes I–IV, colonnes L M M J V S D.
- *  6. Le livre noir au soleil d'or donne la règle : « Ordo lineam, dies columnam tenet. »
- *  7. Les lettres aux croisements forment le mot de la serrure.
+ *  6. Le rang donne la ligne, le jour la colonne : les lettres aux croisements forment le mot de la serrure.
  */
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const CODE = 'NOVA';
@@ -172,7 +171,7 @@ export class GrimoireGame implements Game {
   }
 }
 
-/** Le livre noir au soleil d'or : une seule phrase, en latin. */
+/** Le livre noir au soleil d'or : la table des correspondances des Anciens, « De Metallis et Astris ». */
 export class TomeGame implements Game {
   private ctx!: GameContext;
   private root: HTMLElement;
@@ -180,10 +179,11 @@ export class TomeGame implements Game {
 
   constructor() {
     this.root = el('div', 'secret hidden');
+    const rows = [['☉', 'or'], ['☽', 'argent'], ['♂', 'fer'], ['♀', 'cuivre'], ['☿', 'mercure'], ['♃', 'étain'], ['♄', 'plomb']];
     this.root.innerHTML = `
       <div class="secret-panel tome">
-        <div class="kicker">Folio VII</div>
-        <blockquote>Ordo lineam, dies columnam tenet.</blockquote>
+        <div class="kicker">De Metallis et Astris</div>
+        <table class="metals">${rows.map(([a, m]) => `<tr><td class="sym">${a}</td><td>${m}</td></tr>`).join('')}</table>
         <div class="btn-row"><button class="ghost secret-quit">Refermer le livre</button></div>
       </div>`;
     this.root.querySelector('.secret-quit')!.addEventListener('click', () => this.ctx.exit());
@@ -201,34 +201,6 @@ export class TomeGame implements Game {
 
   close() {
     this.active = false;
-    this.root.classList.add('hidden');
-  }
-}
-
-/** « De Metallis et Astris » : la table des correspondances des Anciens. */
-export class MetalsGame implements Game {
-  private ctx!: GameContext;
-  private root: HTMLElement;
-
-  constructor() {
-    this.root = el('div', 'secret hidden');
-    const rows = [['☉', 'or'], ['☽', 'argent'], ['♂', 'fer'], ['♀', 'cuivre'], ['☿', 'mercure'], ['♃', 'étain'], ['♄', 'plomb']];
-    this.root.innerHTML = `
-      <div class="secret-panel">
-        <div class="kicker">De Metallis et Astris</div>
-        <table class="metals">${rows.map(([a, m]) => `<tr><td class="sym">${a}</td><td>${m}</td></tr>`).join('')}</table>
-        <div class="btn-row"><button class="ghost secret-quit">Refermer le livre</button></div>
-      </div>`;
-    this.root.querySelector('.secret-quit')!.addEventListener('click', () => this.ctx.exit());
-    document.body.appendChild(this.root);
-  }
-
-  open(ctx: GameContext) {
-    this.ctx = ctx;
-    this.root.classList.remove('hidden');
-  }
-
-  close() {
     this.root.classList.add('hidden');
   }
 }

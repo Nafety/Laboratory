@@ -24,7 +24,13 @@
         <div id="loading">
           <div class="load-track"><div id="load-bar"></div></div>
           <p class="small" id="load-text">Préparation du laboratoire…</p>
+          <p class="small gpu-hint">Astuce : le labo est bien plus fluide quand l'accélération matérielle est activée dans le navigateur.</p>
         </div>
+        <p id="gpu-warn" class="gpu-warn hidden">
+          Ton navigateur n'utilise pas la carte graphique : le labo risque d'être très lent.<br />
+          Active « Utiliser l'accélération graphique si disponible » dans les paramètres (Chrome : Système · Edge : Système et performances ·
+          Firefox : Général › Performances), puis relance le navigateur.
+        </p>
         <button id="play" class="hidden">Entrer dans le labo</button>
         <p class="credits">Modèles et textures : Poly Haven (CC0) · Planètes : Solar System Scope (CC BY 4.0) · Questions en direct : Wikipédia (CC BY-SA)</p>
       </div>

@@ -45,7 +45,7 @@ export interface Hotspot {
   object: THREE.Object3D;
   action: string;
   use?: () => void;
-  station?: 'metals' | 'tome';
+  station?: 'tome';
 }
 
 export interface LabRefs {
@@ -58,7 +58,7 @@ export interface LabRefs {
   anchors: Record<'globe' | 'telescope' | 'chemistry' | 'bureau' | 'chest' | 'clock' | 'portal' | 'bust' | 'lock' | 'tome' | 'grimoire', Anchor>;
   /** Le passage secret : ouvert ou non, et comment l'ouvrir. */
   secret: { isOpen: () => boolean; open: () => void; watch: { pos: THREE.Vector3; target: THREE.Vector3 } };
-  /** Petits mécanismes cachés, visés au centre de l'écran : bouton de la pendule, manivelle de la lunette, livre des métaux. */
+  /** Petits mécanismes cachés, visés au centre de l'écran : bouton de la pendule, manivelle de la lunette, livre noir. */
   hotspots: Hotspot[];
 }
 
@@ -252,10 +252,11 @@ export async function buildLab(scene: THREE.Scene) {
     head.position.set(card.position.x, card.position.y + 0.04, HD - 0.008);
     scene.add(head);
   }
-  await model('fancy_picture_frame_02', 2.9, 2.1, HD - 0.01, PI, 1.5);
+  await model('fancy_picture_frame_02', 2.8, 2.1, HD - 0.01, PI, 1.5); // un peu à gauche : la pendule ne le masque pas
 
   // ---------- Coin sud-est : pendule, fauteuil, guéridon ----------
-  const clockPos = new THREE.Vector3(3.95, 0, HD - 0.35); // un peu à gauche : on peut passer entre elle et la vitrine pour atteindre la serrure
+  // décalée vers le coffre : il reste ~0,86 m entre elle et la vitrine (le joueur fait 0,70 m), on peut se glisser dans le coin jusqu'à la serrure
+  const clockPos = new THREE.Vector3(3.7, 0, HD - 0.35);
   const clock = await model('vintage_grandfather_clock_01', clockPos.x, 0, clockPos.z, PI, 1, true);
   // Dans la vitrine noire de la pendule, une inscription invisible tant que l'intérieur n'est pas éclairé
   const clockBox = new THREE.Box3().setFromObject(clock);
@@ -467,7 +468,6 @@ export async function buildLab(scene: THREE.Scene) {
     hotspots: [
       { object: buttonHit, action: 'Appuyer sur le petit rivet', use: toggleClock },
       { object: crankHit, action: 'Tourner la manivelle de la lunette', use: turnScope },
-      { object: library.metals, action: 'Ouvrir le livre « De Metallis et Astris »', station: 'metals' },
       { object: tome, action: 'Ouvrir le livre noir', station: 'tome' },
     ],
     secret: { isOpen: () => doorOpen, open: () => openDoor(), watch: { pos: new THREE.Vector3(2.9, 1.75, 3.3), target: new THREE.Vector3(5.3, 1.0, 1.9) } },

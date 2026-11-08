@@ -23,7 +23,7 @@ import { Network } from './net';
 import { Avatars } from './avatars';
 import { Match, type MatchApi, type Standing } from './match';
 import './multi.css';
-import { BustPlaqueGame, CabinetLockGame, GrimoireGame, MASTER_KEY, MetalsGame, TomeGame } from './games/secret-game';
+import { BustPlaqueGame, CabinetLockGame, GrimoireGame, MASTER_KEY, TomeGame } from './games/secret-game';
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -36,6 +36,14 @@ renderer.shadowMap.autoUpdate = false; // décor presque immobile : ombres recal
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 $('app').appendChild(renderer.domElement);
+
+// Sans accélération matérielle, le navigateur dessine la 3D avec le processeur (SwiftShader, llvmpipe…) : on prévient
+{
+  const gl = renderer.getContext();
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(name)) $('gpu-warn').classList.remove('hidden');
+}
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1410);
@@ -81,9 +89,9 @@ let netClock = 0;
 const yawEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
 // --- Ateliers ---
-type StationId = 'globe' | 'history' | 'telescope' | 'chemistry' | 'bureau' | 'chest' | 'clock' | 'portal' | 'bust' | 'lock' | 'tome' | 'metals' | 'grimoire';
+type StationId = 'globe' | 'history' | 'telescope' | 'chemistry' | 'bureau' | 'chest' | 'clock' | 'portal' | 'bust' | 'lock' | 'tome' | 'grimoire';
 /** Ateliers toujours joués seul, même avec d'autres savants connectés. */
-const SOLO_ONLY: StationId[] = ['portal', 'bust', 'lock', 'tome', 'metals', 'grimoire'];
+const SOLO_ONLY: StationId[] = ['portal', 'bust', 'lock', 'tome', 'grimoire'];
 interface Station {
   id: StationId;
   action: string;
@@ -119,7 +127,6 @@ const games: Partial<Record<StationId, Game>> = {
   bust: new BustPlaqueGame(),
   lock: new CabinetLockGame(),
   tome: new TomeGame(),
-  metals: new MetalsGame(),
   grimoire: new GrimoireGame(),
 };
 
@@ -135,7 +142,6 @@ const STATION_LABELS: Record<StationId, string> = {
   bust: 'le socle du buste',
   lock: 'la serrure de la vitrine',
   tome: 'le livre noir',
-  metals: 'le livre des métaux',
   grimoire: 'le grimoire',
 };
 
@@ -246,7 +252,7 @@ async function init() {
   });
 
   ctx = { camera, rig, refs: lab.refs, exit: () => leaveStation(true), match: null };
-  for (const s of STATIONS) if (s.id !== 'history' && s.id !== 'metals' && s.id !== 'tome') s.focus.copy(lab.refs.anchors[s.id].focus);
+  for (const s of STATIONS) if (s.id !== 'history' && s.id !== 'tome') s.focus.copy(lab.refs.anchors[s.id].focus);
   (games.history as BookGame).books = lab.refs.library.books; // pour que l'hôte puisse préparer un livre
   // Récompense du passage secret, conservée d'une partie à l'autre
   try {
@@ -360,7 +366,7 @@ function findTarget(): Station | null {
   lib.selected = null;
   // racine visée → ce qu'elle déclenche (les mécanismes d'abord : la manivelle est montée sur la lunette)
   const owners = new Map<THREE.Object3D, Station | 'book'>();
-  for (const h of ctx.refs.hotspots) owners.set(h.object, { id: h.station ?? 'metals', action: h.action, focus: new THREE.Vector2(), reach: 2.1, use: h.use });
+  for (const h of ctx.refs.hotspots) owners.set(h.object, { id: h.station ?? 'tome', action: h.action, focus: new THREE.Vector2(), reach: 2.1, use: h.use });
   for (const s of STATIONS) {
     if (s.id === 'grimoire' && !ctx.refs.secret.isOpen()) continue; // caché tant que le passage est fermé
     if (s.id === 'lock' && ctx.refs.secret.isOpen()) continue; // la vitrine a pivoté

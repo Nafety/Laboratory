@@ -242,10 +242,10 @@ export function buildLibrary(width: number, count: number) {
           x += 0.32;
           continue;
         }
-        if (r < 0.1) {
-          // pile de livres couchés
+        if (r < 0.1 && end - x > 0.12) {
+          // pile de livres couchés, jamais plus large que la place restante (sinon elle rentre dans le montant)
           let py = y;
-          const pw = 0.22 + rand() * 0.08;
+          const pw = Math.min(0.22 + rand() * 0.08, end - x);
           for (let k = 0; k < 2 + Math.floor(rand() * 3); k++) {
             const th = 0.035 + rand() * 0.03;
             const m = new THREE.Matrix4().compose(
@@ -259,10 +259,11 @@ export function buildLibrary(width: number, count: number) {
           x += pw + 0.02;
           continue;
         }
-        const bw = 0.03 + rand() * 0.045;
+        // le montant commence à end + 0,02 : ni un livre épais ni un livre penché ne doivent y entrer
+        const bw = Math.min(0.03 + rand() * 0.045, end + 0.015 - x);
         const bh = 0.25 + rand() * 0.17;
         const bd = 0.2 + rand() * 0.08;
-        const lean = rand() < 0.06 ? 0.18 : 0;
+        const lean = rand() < 0.06 && x + bw + 0.18 * bh < end + 0.015 ? 0.18 : 0;
         const m = new THREE.Matrix4().compose(
           new THREE.Vector3(x + bw / 2 + lean * bh * 0.5, y + bh / 2, D / 2 - 0.04 - bd / 2),
           new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -lean)),
@@ -273,25 +274,6 @@ export function buildLibrary(width: number, count: number) {
         if (rand() < 0.05) x += 0.05 + rand() * 0.08;
       }
     }
-  }
-
-  // Un livre à part, rangé parmi les autres à hauteur d'yeux : « De Metallis et Astris »
-  const pos = new THREE.Vector3();
-  let sIdx = -1;
-  let best = Infinity;
-  slots.forEach((s, i) => {
-    pos.setFromMatrixPosition(s.matrix);
-    const d = Math.abs(pos.x - 0.45);
-    if (s.standing && pos.y > 1.65 && pos.y < 1.9 && d < best) [best, sIdx] = [d, i];
-  });
-  const metals = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
-  if (sIdx >= 0) {
-    const leather = new THREE.MeshStandardMaterial({ color: 0x1e3426, roughness: 0.7 });
-    const spine = new THREE.MeshStandardMaterial({ map: spineTexture('#1e3426', 3), roughness: 0.55 });
-    const edges = new THREE.MeshStandardMaterial({ map: pageEdgeTexture(), roughness: 0.95 });
-    metals.material = [leather, leather, edges, edges, spine, edges];
-    metals.applyMatrix4(slots.splice(sIdx, 1)[0].matrix);
-    g.add(metals);
   }
 
   // Un InstancedMesh par variante de reliure ; chaque livre peut être pris (voir l'atelier Livres)
@@ -318,7 +300,7 @@ export function buildLibrary(width: number, count: number) {
   proxy.visible = false;
   g.add(proxy);
 
-  return { group: g, books, proxy, decorSpots, metals };
+  return { group: g, books, proxy, decorSpots };
 }
 
 export function buildLadder(height: number) {
